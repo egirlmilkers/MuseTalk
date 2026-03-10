@@ -1,0 +1,38 @@
+[project]
+name = "MuseTalk"
+version = "1.5.1"
+description = "MuseTalk: Real-Time High Quality Lip Synchorization with Latent Space Inpainting"
+readme = "README.md"
+requires-python = "==3.10.*"
+dependencies = [
+    "accelerate<0.29.0",
+    "diffusers<0.31.0",
+    "einops<0.9.0",
+    "ffmpeg-python>=0.2.0",
+    "gradio<6.0.0",
+    "imageio[ffmpeg]>=2.37.3",
+    "librosa<0.12.0",
+    "mmengine>=0.10.7",
+    "moviepy>=2.2.1",
+    "numpy<2.0.0",
+    "omegaconf>=2.3.0",
+    "opencv-python<4.12",
+    "openmim>=0.3.9",
+    "torch==2.0.1",
+    "torchaudio==2.0.2",
+    "torchvision==0.15.2",
+    "tqdm",
+    "transformers<4.40.0",
+]
+
+[dependency-groups]
+dev = [
+    "setuptools<82",
+]
+
+[tool.uv]
+build-constraint-dependencies = ["setuptools<82"]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu118"

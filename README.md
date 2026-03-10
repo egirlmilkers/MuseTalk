@@ -11,7 +11,8 @@ Yubin Zeng,
 Chao Zhan,
 Junxin Huang,
 Yingjie He,
-Wenjiang Zhou
+Wenjiang Zhou,
+SoniaNvm
 (<sup>*</sup>Equal Contribution, <sup>†</sup>Corresponding Author, benbinwu@tencent.com)
 
 Lyra Lab, Tencent Music Entertainment
@@ -147,29 +148,27 @@ We also hope you note that we have not verified, maintained, or updated third-pa
 ## Installation
 To prepare the Python environment and install additional packages such as opencv, diffusers, mmcv, etc., please follow the steps below:
 
+```bash
+git clone https://github.com/egirlmilkers/MuseTalk
+cd MuseTalk
+```
+
 ### Build environment
 We recommend Python 3.10 and CUDA 11.7. Set up your environment as follows:
 
-```shell
-conda create -n MuseTalk python==3.10
-conda activate MuseTalk
-```
-
-### Install PyTorch 2.0.1
-Choose one of the following installation methods:
-
-```shell
-# Option 1: Using pip
-pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
-
-# Option 2: Using conda
-conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.8 -c pytorch -c nvidia
-```
+- [Install uv (recommended)](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer)
 
 ### Install Dependencies
-Install the remaining required packages:
+Install the required packages:
 
 ```shell
+# Using uv
+uv sync
+.venv\Scripts\activate
+
+# Using pip
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -177,11 +176,11 @@ pip install -r requirements.txt
 Install the MMLab ecosystem packages:
 
 ```bash
-pip install --no-cache-dir -U openmim
-mim install mmengine
-mim install "mmcv==2.0.1"
-mim install "mmdet==3.1.0"
-mim install "mmpose==1.1.0"
+# uv
+uv run mim install "mmcv==2.0.1" "mmdet==3.1.0" "mmpose==1.1.0"
+
+# pip
+mim install "mmcv==2.0.1" "mmdet==3.1.0" "mmpose==1.1.0"
 ```
 
 ### Setup FFmpeg
