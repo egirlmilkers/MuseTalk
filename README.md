@@ -144,81 +144,76 @@ Thanks for the third-party integration, which makes installation and use more co
 We also hope you note that we have not verified, maintained, or updated third-party. Please refer to this project for specific results.
 
 ### [ComfyUI](https://github.com/chaojie/ComfyUI-MuseTalk)
+> Support is not at all guaranteed. As of writing, the repository hasn't been updated in years.
 
 ## Installation
-To prepare the Python environment and install additional packages such as opencv, diffusers, mmcv, etc., please follow the steps below:
+This repository has been changed to use `uv` and `pyproject.toml` for dependency resolution. It abandons the outdated PyTorch versions and enables native support for modern CUDA toolkits and GPU architectures.
 
+### Prerequisites
+* **Python:** 3.10
+* **Package Manager:** [uv](https://docs.astral.sh/uv/getting-started/installation/) (`pip install uv`)
+* **CUDA Toolkit:** CUDA 12.8 or 13.x natively supported.
+
+### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/egirlmilkers/MuseTalk
 cd MuseTalk
 ```
 
-### Build environment
-We recommend Python 3.10 and CUDA 11.7. Set up your environment as follows:
+### Step 2: Configure PyTorch & Custom `mmcv` Wheels
+Standard installations of OpenMMLab's `mmcv` will fail with modern torch, resulting in failed wheel builds or dependency hell. Because MuseTalk relies on the lightweight RTMPose architecture, we can bypass the heavy C++ CUDA compilation entirely.
 
-- [Install uv (recommended)](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer)
+I[^1] have provided two pre-packaged lightweight wheels in the `.\wheels\` directory. **By default, `pyproject.toml` is configured for CUDA 13.0 (`cu130`).**
 
-### Install Dependencies
-Install the required packages:
+If you need to use **CUDA 12.8 (`cu128`)**, open `pyproject.toml` and change these two sections before proceeding:
 
-```shell
-# Using uv
+1. Change the PyTorch index URL:
+```toml
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu128" # Changed from cu130
+```
+
+2. Point the source to the `cu128` wheel:
+```toml
+[tool.uv.sources]
+mmcv = { path = "./wheels/mmcv-2.0.1+cu128-cp310-cp310-win_amd64.whl" }
+```
+
+### Step 3: Install Dependencies
+Thanks to the `pyproject.toml`, you no longer need to install with a requirements.txt (although one is provided anyways). The config also removes the need for the `mim install` process.
+
+```bash
+# Creates the virtual environment and installs everything
 uv sync
+
+# Activate the environment
+# Windows:
 .venv\Scripts\activate
-
-# Using pip
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+# Linux:
+source .venv/bin/activate
 ```
 
-### Install MMLab Packages
-Install the MMLab ecosystem packages:
+### Step 4: Setup FFmpeg
+FFmpeg is required for audio and video processing.
 
-```bash
-# uv
-uv run mim install "mmcv==2.0.1" "mmdet==3.1.0" "mmpose==1.1.0"
+* **Windows:** [Download the ffmpeg-static build](https://github.com/BtbN/FFmpeg-Builds/releases), extract it, and add the `bin` folder to your system's PATH environment variable.
+* **Linux:** Run `sudo apt-get install ffmpeg`
 
-# pip
-mim install "mmcv==2.0.1" "mmdet==3.1.0" "mmpose==1.1.0"
-```
+### Step 5: Download Weights
+I[^1] have optimized the weight downloading scripts.
 
-### Setup FFmpeg
-1. [Download](https://github.com/BtbN/FFmpeg-Builds/releases) the ffmpeg-static package
+Simply run the script for your operating system:
 
-2. Configure FFmpeg based on your operating system:
+* **Windows:** `download_weights.bat`
+* **Linux:** `bash download_weights.sh`
 
-For Linux:
-```bash
-export FFMPEG_PATH=/path/to/ffmpeg
-# Example:
-export FFMPEG_PATH=/musetalk/ffmpeg-4.4-amd64-static
-```
-
-For Windows:
-Add the `ffmpeg-xxx\bin` directory to your system's PATH environment variable. Verify the installation by running `ffmpeg -version` in the command prompt - it should display the ffmpeg version information.
-
-### Download weights
-You can download weights in two ways:
-
-#### Option 1: Using Download Scripts
-We provide two scripts for automatic downloading:
-
-For Linux:
-```bash
-sh ./download_weights.sh
-```
-
-For Windows:
-```batch
-# Run the script
-download_weights.bat
-```
+[^1]: [SoniaNvm](https://github.com/egirlmilkers)
 
 #### Option 2: Manual Download
 You can also download the weights manually from the following links:
 
-1. Download our trained [weights](https://huggingface.co/TMElyralab/MuseTalk/tree/main)
+1. Download the MuseTalk [weights](https://huggingface.co/TMElyralab/MuseTalk/tree/main)
 2. Download the weights of other components:
    - [sd-vae-ft-mse](https://huggingface.co/stabilityai/sd-vae-ft-mse/tree/main)
    - [whisper](https://huggingface.co/openai/whisper-tiny/tree/main)
@@ -227,7 +222,8 @@ You can also download the weights manually from the following links:
    - [face-parse-bisent](https://drive.google.com/file/d/154JgKpzCPW82qINcVieuPH3fZ2e0P812/view?pli=1)
    - [resnet18](https://download.pytorch.org/models/resnet18-5c106cde.pth)
 
-Finally, these weights should be organized in `models` as follows:
+The weights should be organized in `models` as follows:
+
 ```
 ./models/
 ├── musetalk
@@ -250,8 +246,8 @@ Finally, these weights should be organized in `models` as follows:
     ├── config.json
     ├── pytorch_model.bin
     └── preprocessor_config.json
-    
 ```
+
 ## Quickstart
 
 ### Inference
@@ -259,30 +255,44 @@ We provide inference scripts for both versions of MuseTalk:
 
 #### Prerequisites
 Before running inference, please ensure ffmpeg is installed and accessible:
+
 ```bash
 # Check ffmpeg installation
 ffmpeg -version
 ```
+
 If ffmpeg is not found, please install it first:
 - Windows: Download from [ffmpeg-static](https://github.com/BtbN/FFmpeg-Builds/releases) and add to PATH
 - Linux: `sudo apt-get install ffmpeg`
 
 #### Normal Inference
+
 ##### Linux Environment
 ```bash
 # MuseTalk 1.5 (Recommended)
-sh inference.sh v1.5 normal
+bash inference.sh v1.5 normal
 
 # MuseTalk 1.0
-sh inference.sh v1.0 normal
+bash inference.sh v1.0 normal
 ```
 
 ##### Windows Environment
+I[^1] have added an `inference.bat` alongside the original `inference.sh` for Windows users.
 
-Please ensure that you set the `ffmpeg_path` to match the actual location of your FFmpeg installation.
+**Using the Batch Script (Recommended):**
+```bat
+:: MuseTalk 1.5 (Recommended)
+inference.bat v1.5 normal
+
+:: MuseTalk 1.0
+inference.bat v1.0 normal
+```
+
+**Alternative (Manual Execution):**
+If you need granular control over arguments you can call the Python script directly:
 
 ```bash
-# MuseTalk 1.5 (Recommended)
+# MuseTalk 1.5
 python -m scripts.inference --inference_config configs\inference\test.yaml --result_dir results\test --unet_model_path models\musetalkV15\unet.pth --unet_config models\musetalkV15\musetalk.json --version v15 --ffmpeg_path ffmpeg-master-latest-win64-gpl-shared\bin
 
 # For MuseTalk 1.0, change:
@@ -291,25 +301,34 @@ python -m scripts.inference --inference_config configs\inference\test.yaml --res
 # - --version v15 -> --version v1
 ```
 
+---
+
 #### Real-time Inference
 ##### Linux Environment
 ```bash
 # MuseTalk 1.5 (Recommended)
-sh inference.sh v1.5 realtime
+bash inference.sh v1.5 realtime
 
 # MuseTalk 1.0
-sh inference.sh v1.0 realtime
+bash inference.sh v1.0 realtime
 ```
 
 ##### Windows Environment
+**Using the Batch Script (Recommended):**
+```bat
+:: MuseTalk 1.5 (Recommended)
+inference.bat v1.5 realtime
+
+:: MuseTalk 1.0
+inference.bat v1.0 realtime
+```
+
+**Alternative (Manual Execution):**
 ```bash
-# MuseTalk 1.5 (Recommended)
+# MuseTalk 1.5
 python -m scripts.realtime_inference --inference_config configs\inference\realtime.yaml --result_dir results\realtime --unet_model_path models\musetalkV15\unet.pth --unet_config models\musetalkV15\musetalk.json --version v15 --fps 25 --ffmpeg_path ffmpeg-master-latest-win64-gpl-shared\bin
 
-# For MuseTalk 1.0, change:
-# - models\musetalkV15 -> models\musetalk
-# - unet.pth -> pytorch_model.bin
-# - --version v15 -> --version v1
+# For MuseTalk 1.0, change parameters as noted in Normal Inference above.
 ```
 
 The configuration file `configs/inference/test.yaml` contains the inference settings, including:

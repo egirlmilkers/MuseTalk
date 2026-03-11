@@ -28,14 +28,6 @@ dependencies = [
     "transformers<5.0.0",
 ]
 
-[dependency-groups]
-dev = [
-    "setuptools<82",
-]
-
-[tool.uv]
-build-constraint-dependencies = ["setuptools<82"]
-
 [[tool.uv.index]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cu130"
