@@ -190,7 +190,11 @@ def main(args):
 
 			# Process each frame
 			input_latent_list = []
-			for bbox, frame in zip(coord_list, frame_list):
+			for bbox, frame in tqdm(
+				zip(coord_list, frame_list),
+				total=len(coord_list),
+				desc='Extracting Latents',
+			):
 				if bbox == coord_placeholder:
 					continue
 				x1, y1, x2, y2 = bbox
@@ -225,7 +229,9 @@ def main(args):
 			total = int(np.ceil(float(video_num) / batch_size))
 
 			# Execute inference
-			for i, (whisper_batch, latent_batch) in enumerate(tqdm(gen, total=total)):
+			for i, (whisper_batch, latent_batch) in enumerate(
+				tqdm(gen, total=total, desc='Generating Video Latents')
+			):
 				audio_feature_batch = pe(whisper_batch)
 				latent_batch = latent_batch.to(dtype=unet.model.dtype)
 
@@ -237,8 +243,9 @@ def main(args):
 					res_frame_list.append(res_frame)
 
 			# Pad generated images to original video size
-			print('Padding generated images to original video size')
-			for i, res_frame in enumerate(tqdm(res_frame_list)):
+			for i, res_frame in enumerate(
+				tqdm(res_frame_list, desc='Padding & Blending Frames')
+			):
 				bbox = coord_list_cycle[i % (len(coord_list_cycle))]
 				ori_frame = copy.deepcopy(frame_list_cycle[i % (len(frame_list_cycle))])
 				x1, y1, x2, y2 = bbox
